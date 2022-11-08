@@ -55,7 +55,7 @@ export default {
 			callback,
 			{
 				// При каком проценте видимости должен срабатывать `callback`
-				threshold: 1.0,
+				threshold: 0.1,
 			}
 		);
 		observer.observe(elm);
