@@ -1,73 +1,53 @@
 <template>
-    <div class="app">
-        <div>!!!!!!</div>
-        <button @click="hiddenTop">Скрыть вверху</button>
-        <button @click="hiddenDown">Скрыть внизу</button>
-        <button @click="showTop">Показать вверху</button>
-        <button @click="showDown">Показать внизу</button>
-        <div ref="box" class="box">
-            <div
-                ref="l_top"
-                v-intersection="intersection_top"
-                class="limit top item"
-                @click="intersection_top"
-            ></div>
-            <div ref="items" class="items_list">
-                <div class="item" v-for="(it, id) in files" :key="id">
-                    {{ it }}
-                </div>
+    <div ref="box" class="box">
+        <div
+            ref="l_top"
+            v-intersection="intersection_top"
+            class="limit top item"
+            @click="intersection_top"
+        ></div>
+        <div ref="items" class="items_list">
+            <div class="item" v-for="(it, id) in files" :key="id">
+                {{ it }}
             </div>
-            <div
-                ref="l_bottom"
-                v-intersection="intersection_down"
-                class="limit bottom item"
-                @click="intersection_down"
-            ></div>
         </div>
-        <div>!!!!!!</div>
+        <div
+            ref="l_bottom"
+            v-intersection="intersection_down"
+            class="limit bottom item"
+            @click="intersection_down"
+        ></div>
     </div>
 </template>
 <script lang="ts">
 export default {
+    name: "vscroller",
     // Компоненты
     components: {},
     // Аргументы
-    //props: {},
+    props: {
+        files: {
+            type: Array as () => Array<any>,
+        },
+        // Сколько минимально отображать элементов(нужно подобрать количество, чтобы высота элементов скрывала нижнею границу)
+        min_visible: {
+            type: Number,
+            default: 10,
+        },
+        // Сколько максимально отображать элементов
+        max_visible: {
+            type: Number,
+            default: 11,
+        },
+        // Сколько отображать(и скрывать) при достижения края
+        count_next: {
+            type: Number,
+            default: 1,
+        },
+    },
     // Переменные
     data() {
         return {
-            files: [
-                "home",
-                "home1",
-                "home2",
-                "home3",
-                "home4",
-                "home5",
-                "home6",
-                "home7",
-                "home8",
-                "home9",
-                "home10",
-                "home11",
-                "etc",
-                "etc1",
-                "etc2",
-                "etc3",
-                "etc4",
-                "etc5",
-                "etc6",
-                "etc7",
-                "etc8",
-                "etc9",
-                "etc10",
-                "etc11",
-            ],
-            // Сколько минерально отображать элементов
-            min_visible: 10,
-            // Сколько максимально отображать элементов
-            max_visible: 11,
-            // Сколько отображать(и скрывать) при достижения края
-            next_visible: 1,
             //
             // Системный
             //
@@ -89,8 +69,8 @@ export default {
         // Срабатывает при достижение конца видаемого списка с НИЗУ
         intersection_down() {
             // console.log("Пересек Низ");
-            // Показываем по `next_visible` элементов в низ, и скрываем столько же вверх
-            for (let i = 0; i < this.next_visible; i++) {
+            // Показываем по `count_next` элементов в низ, и скрываем столько же вверх
+            for (let i = 0; i < this.count_next; i++) {
                 // Показать сверху
                 this.hiddenTop();
                 // Скрыть снизу
@@ -104,8 +84,8 @@ export default {
                 // Запоминаем положение скорла до добавления элемента
                 const y = this.$refs.box.scrollTop;
                 const x = this.$refs.box.scrollLeft;
-                console.log(`${y}:${x}`);
-                for (let i = 0; i < this.next_visible; i++) {
+                // console.log(`${y}:${x}`);
+                for (let i = 0; i < this.count_next; i++) {
                     this.hiddenDown();
                     this.showTop();
                 }
@@ -234,41 +214,31 @@ export default {
     computed: {},
 };
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 @import "wbs/vue/gcolor.scss";
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-.app {
-    background: $ЦветФона;
-    height: 100vh;
-    width: 100vw;
-    .box {
+.box {
+    width: 100%;
+    ///
+    height: 90vh;
+    // height: 500px;
+    ///
+    overflow: auto;
+    border: 1px solid aqua;
+    .limit {
+        display: block;
+        margin: auto;
+        &.top {
+            // background: aqua;
+        }
+        &.bottom {
+            // background: yellow;
+        }
+    }
+    .items_list {
+        color: ghostwhite;
+        padding: 8px;
         width: 100%;
-        ///
-        height: 50vh;
-        // height: 500px;
-        ///
-        overflow: auto;
-        border: 1px solid aqua;
-        .limit {
-            display: block;
-            margin: auto;
-            &.top {
-                // background: aqua;
-            }
-            &.bottom {
-                // background: yellow;
-            }
-        }
-        .items_list {
-            color: ghostwhite;
-            padding: 8px;
-            width: 100%;
-        }
     }
 }
 .item {
