@@ -42,12 +42,12 @@ export default {
 		const callback = (entries: any, observer: any) => {
 			if (entries[0].isIntersecting) {
 				// Момент пересечения
-				console.log("Пересекли observer");
+				// console.log("Пересекли observer");
 				// Вызываем событие достижение конца, для  компанента
 				binding.value();
 			} else {
 				// Момент выхода из пересечения
-				console.log("Не Пересекли observer");
+				// console.log("Не Пересекли observer");
 			}
 		};
 		const observer = new IntersectionObserver(

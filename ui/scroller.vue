@@ -62,35 +62,46 @@ export default {
                 "etc10",
                 "etc11",
             ],
-            // Сколько минерально показывать элементов
+            // Сколько минерально отображать элементов
             min_visible: 10,
-            // Сколько максимально показывать элементов
+            // Сколько максимально отображать элементов
             max_visible: 11,
+            // Сколько отображать(и скрывать) при достижения края
             next_visible: 1,
             //
+            // Системный
+            //
+            // Последний элемент в списке(не важно видимый или нет)
             last_element: <HTMLElement>undefined,
+            // Первый элемент в списке(не важно видимый или нет)
             first_element: <HTMLElement>undefined,
-            //
-            down_visible_elm: <HTMLElement>undefined,
+            // Крайний видимый элемент с верху
             top_visible_elm: <HTMLElement>undefined,
-            //
+            // Крайний видимый элемент с низу
+            down_visible_elm: <HTMLElement>undefined,
+            // Сколько сейчас видимо элементов
             count_visible: <number>0,
         };
     },
 
     // Методы
     methods: {
+        // Срабатывает при достижение конца видаемого списка с НИЗУ
         intersection_down() {
-            console.log("Пересек Низ");
-            // Показываем по одному элементу в низ
+            // console.log("Пересек Низ");
+            // Показываем по `next_visible` элементов в низ, и скрываем столько же вверх
             for (let i = 0; i < this.next_visible; i++) {
+                // Показать сверху
                 this.hiddenTop();
+                // Скрыть снизу
                 this.showDown();
             }
         },
+        // Срабатывает при достижение конца видаемого списка c ВЕРХУ
         intersection_top() {
-            console.log("Пересек Верх");
+            // console.log("Пересек Верх");
             if (this.top_visible_elm != this.first_element) {
+                // Запоминаем положение скорла до добавления элемента
                 const y = this.$refs.box.scrollTop;
                 const x = this.$refs.box.scrollLeft;
                 console.log(`${y}:${x}`);
@@ -98,19 +109,32 @@ export default {
                     this.hiddenDown();
                     this.showTop();
                 }
-                this.$refs.box.scrollTo(x, y + this.top_visible_elm.offsetHeight);
+                // Возвращаем курсор в место до добавления элементов, чтобы не было скачков при скролле
+                this.$refs.box.scrollTo(
+                    x,
+                    // Берем высоту элемента и добавляем к уже сахаренным координатам, чтобы не было скачков
+                    y + this.top_visible_elm.offsetHeight
+                );
             }
         },
         /*Показать элементы внизу*/
         showDown() {
+            // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            console.log("showDown -" + c);
+            // console.log("showDown -" + c);
+            // Если можно показывать
             if (c) {
+                // Берем следующий не показанный элемент
                 const tmp = this.down_visible_elm.nextElementSibling;
+                // Если он существует
                 if (tmp) {
+                    // И если он не показан
                     if (!tmp.classList.contains("visible")) {
+                        // То показываем его
                         tmp.classList.add("visible");
+                        // Прибавляем в счетчик показанных
                         this.count_visible += 1;
+                        // Смещаем последний(внизу) показанный элемент на, тот что был показан
                         this.down_visible_elm = tmp;
                     }
                 }
@@ -118,14 +142,22 @@ export default {
         },
         /*Показать элементы вверху*/
         showTop() {
+            // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            console.log("showTop -" + c);
+            // console.log("showTop -" + c);
+            // Если можно показывать
             if (c) {
+                // Берем предыдущий не показанный элемент
                 const tmp = this.top_visible_elm.previousElementSibling;
+                // Если он существует
                 if (tmp) {
+                    // И если он не показан
                     if (!tmp.classList.contains("visible")) {
+                        // То показываем его
                         tmp.classList.add("visible");
+                        // Прибавляем в счетчик показанных
                         this.count_visible += 1;
+                        // Смещаем последний(вверху) показанный элемент на, тот что был показан
                         this.top_visible_elm = tmp;
                     }
                 }
@@ -133,12 +165,17 @@ export default {
         },
         /*Скрыть элементы в верху*/
         hiddenDown() {
+            // Если можно скрывать
             const c = this.checkCountVisibleFrom_Hidden();
-            console.log("hiddenDown -" + c);
+            // console.log("hiddenDown -" + c);
             if (c) {
+                // Если он показан
                 if (this.down_visible_elm.classList.contains("visible")) {
+                    // то скрываем его
                     this.down_visible_elm.classList.remove("visible");
+                    // Убавляем счетчик показанных элементов
                     this.count_visible -= 1;
+                    // Смещаем последний(внизу) показанный элемент на элемент назад
                     this.down_visible_elm =
                         this.down_visible_elm.previousElementSibling;
                 }
@@ -146,12 +183,17 @@ export default {
         },
         /*Скрыть элементы в верху*/
         hiddenTop() {
+            // Если можно скрывать
             const c = this.checkCountVisibleFrom_Hidden();
-            console.log("hiddenTop -" + c);
+            // console.log("hiddenTop -" + c);
             if (c) {
+                // Если он показан
                 if (this.top_visible_elm.classList.contains("visible")) {
+                    // то скрываем его
                     this.top_visible_elm.classList.remove("visible");
+                    // Убавляем счетчик показанных элементов
                     this.count_visible -= 1;
+                    // Смещаем последний(вверху) показанный элемент на элемент вперед
                     this.top_visible_elm =
                         this.top_visible_elm.nextElementSibling;
                 }
@@ -167,8 +209,8 @@ export default {
             // Если пытаются показать элемент, когда и так количество показных элементом придельно максимально
             return this.count_visible + 1 > this.max_visible ? false : true;
         },
-
-        addVisibleItem() {
+        /*Инициализация списка*/
+        init() {
             const items = this.$refs.items;
             // Первый элемент из списка
             this.first_element = items.childNodes[1];
@@ -177,14 +219,14 @@ export default {
             // Начальная позиция
             this.down_visible_elm = items.childNodes[0];
             this.top_visible_elm = items.childNodes[0].nextElementSibling;
-            console.log();
+            // Показываем сначала максимум доступных элементов
             for (let i = 0; i < this.max_visible; i++) {
                 this.showDown();
             }
         },
     },
     mounted() {
-        this.addVisibleItem();
+        this.init();
         if (this.min_visible >= this.max_visible) {
             throw Error("Минимум больше Максимума");
         }
@@ -206,14 +248,15 @@ export default {
     width: 100vw;
     .box {
         width: 100%;
-        height: 500px;
+        ///
+        height: 50vh;
+        // height: 500px;
+        ///
         overflow: auto;
-        // scroll-margin-top: 100px;
         border: 1px solid aqua;
         .limit {
             display: block;
             margin: auto;
-
             &.top {
                 // background: aqua;
             }
