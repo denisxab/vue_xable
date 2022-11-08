@@ -7,9 +7,7 @@
             @click="intersection_top"
         ></div>
         <div ref="items" class="items_list">
-            <div class="item" v-for="(it, id) in files" :key="id">
-                {{ it }}
-            </div>
+            <slot></slot>
         </div>
         <div
             ref="l_bottom"
@@ -26,9 +24,6 @@ export default {
     components: {},
     // Аргументы
     props: {
-        files: {
-            type: Array as () => Array<any>,
-        },
         // Сколько минимально отображать элементов(нужно подобрать количество, чтобы высота элементов скрывала нижнею границу)
         min_visible: {
             type: Number,
@@ -101,7 +96,7 @@ export default {
         showDown() {
             // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            // console.log("showDown -" + c);
+            console.log("showDown -" + c);
             // Если можно показывать
             if (c) {
                 // Берем следующий не показанный элемент
@@ -124,7 +119,7 @@ export default {
         showTop() {
             // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            // console.log("showTop -" + c);
+            console.log("showTop -" + c);
             // Если можно показывать
             if (c) {
                 // Берем предыдущий не показанный элемент
@@ -191,18 +186,28 @@ export default {
         },
         /*Инициализация списка*/
         init() {
-            const items = this.$refs.items;
+            const items: HTMLElement = this.$refs.items;
+            const childNodes: NodeListOf<Element> =
+                items.querySelectorAll(".item");
             // Первый элемент из списка
-            this.first_element = items.childNodes[1];
+            this.first_element = childNodes[0];
             // Последний элемент из списка
-            this.last_element = items.childNodes[items.childNodes.length - 1];
+            this.last_element = childNodes[childNodes.length - 1];
             // Начальная позиция
-            this.down_visible_elm = items.childNodes[0];
-            this.top_visible_elm = items.childNodes[0].nextElementSibling;
+            this.down_visible_elm = childNodes[0];
+            this.top_visible_elm = childNodes[0];
+            // Показываем первый элемент
+            this.showFirst();
             // Показываем сначала максимум доступных элементов
             for (let i = 0; i < this.max_visible; i++) {
                 this.showDown();
             }
+        },
+        /* Показываем первый элемент */
+        showFirst() {
+            this.first_element.classList.add("visible");
+            // Прибавляем в счетчик показанных
+            this.count_visible += 1;
         },
     },
     mounted() {
@@ -214,13 +219,13 @@ export default {
     computed: {},
 };
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 @import "wbs/vue/gcolor.scss";
 
 .box {
     width: 100%;
     ///
-    height: 90vh;
+    height: 50vh;
     // height: 500px;
     ///
     overflow: auto;
