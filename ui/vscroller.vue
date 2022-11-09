@@ -2,10 +2,10 @@
 Ленивый динамический список. Показывает только указанные(min_visible,max_visible) количество элементов.
 
 <vscroller
-    :files="files"
     :min_visible="10"
     :max_visible="11"
     :count_next="1"
+    :height_item="`100px`"
 >   
     Сюда можно поместить любой список, обязательно укажите класс `item` ! 
     <div class="item" v-for="(it, id) in files" :key="id">{{ it }}</div>
@@ -18,22 +18,24 @@
 -->
 
 <template>
-    <div ref="box" class="box">
-        <div
-            ref="l_top"
-            v-intersection="intersection_top"
-            class="limit top item"
-            @click="intersection_top"
-        ></div>
-        <div ref="items" class="items_list">
-            <slot></slot>
+    <div ref="vscroller" class="vscroller">
+        <div ref="box" class="box">
+            <div
+                ref="l_top"
+                v-intersection="intersection_top"
+                class="limit top item"
+                @click="intersection_top"
+            ></div>
+            <div ref="items" class="items_list">
+                <slot></slot>
+            </div>
+            <div
+                ref="l_bottom"
+                v-intersection="intersection_down"
+                class="limit bottom item"
+                @click="intersection_down"
+            ></div>
         </div>
-        <div
-            ref="l_bottom"
-            v-intersection="intersection_down"
-            class="limit bottom item"
-            @click="intersection_down"
-        ></div>
     </div>
 </template>
 <script lang="ts">
@@ -58,14 +60,19 @@ export default {
             type: Number,
             default: 1,
         },
+        //
+        // CSS
+        //
+        // Высота одного элемента
         height_item: {
             type: String,
-            default: '100px',
+            default: "100px",
         },
     },
     // Переменные
     data() {
         return {
+            height: 0,
             //
             // Системный
             //
@@ -78,6 +85,8 @@ export default {
         };
     },
     mounted() {
+        // Отслеживаем изменения размера `vscroller`
+        this.vscrollerResizeObserver();
         if (this.min_visible >= this.max_visible) {
             throw Error("Минимум больше Максимума");
         } else {
@@ -228,6 +237,18 @@ export default {
                 }
             }
         },
+        /* Отслеживания изменений динамического размера у `vscroller` для установки этого размера в статический размер `box` */
+        vscrollerResizeObserver() {
+            /* нельзя задать через css динамический размер для `box` 
+            так как прокручиваемые списки должны иметь точную высоту */
+            const resizeObserver = new ResizeObserver(() => {
+                this.$refs.box.style.setProperty(
+                    "height",
+                    this.$refs.vscroller.offsetHeight + "px"
+                );
+            });
+            resizeObserver.observe(this.$refs.vscroller);
+        },
     },
     computed: {
         firstElement() {
@@ -239,30 +260,36 @@ export default {
 <style lang="scss">
 @import "wbs/vue/gcolor.scss";
 
-.box {
+.vscroller {
     width: 100%;
-    ///
-    height: 50vh;
-    // height: 500px;
-    ///
-    overflow: auto;
-    border: 1px solid aqua;
-    .limit {
-        display: block;
-        margin: auto;
-        &.top {
-            // background: aqua;
-        }
-        &.bottom {
-            // background: yellow;
-        }
-    }
-    .items_list {
-        color: ghostwhite;
-        padding: 8px;
+    height: 100%;
+    border: 1px solid rgb(156, 192, 147);
+    .box {
         width: 100%;
+        ///
+        height: 50vh;
+        // height: 500px;
+        ///
+        overflow: auto;
+        border: 1px solid aqua;
+        .limit {
+            display: block;
+            margin: auto;
+            &.top {
+                // background: aqua;
+            }
+            &.bottom {
+                // background: yellow;
+            }
+        }
+        .items_list {
+            color: ghostwhite;
+            padding: 8px;
+            width: 100%;
+        }
     }
 }
+
 .item {
     height: v-bind(height_item);
     width: 100%;
