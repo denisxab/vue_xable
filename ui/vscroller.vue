@@ -4,6 +4,8 @@
 
 Показывает только указанные(min_visible,max_visible) количество элементов.
 
+Родительский элемент должен иметь высоту(height) в `%` или `px`
+
 <vscroller
     :min_visible="10"
     :max_visible="11"
@@ -36,6 +38,7 @@
 
 <template>
     <div ref="vscroller" class="vscroller">
+        <!-- {{ countItems }} -->
         <div ref="box" class="box">
             <div
                 ref="l_top"
@@ -85,11 +88,14 @@ export default {
             type: String,
             default: "100px",
         },
+        display_visible_item: {
+            type: String,
+            default: "block",
+        },
     },
     // Переменные
     data() {
         return {
-            height: 0,
             //
             // Системный
             //
@@ -99,6 +105,10 @@ export default {
             down_visible_elm: <HTMLElement>undefined,
             // Сколько сейчас видимо элементов
             count_visible: <number>0,
+            //  Сколько элементов в списке
+            countItems: <number>0,
+            // Первый элемент в списке
+            firstElement: <HTMLElement | undefined>undefined,
         };
     },
     mounted() {
@@ -106,8 +116,6 @@ export default {
         this.vscrollerResizeObserver();
         if (this.min_visible >= this.max_visible) {
             throw Error("Минимум больше Максимума");
-        } else {
-            this.init();
         }
     },
     methods: {
@@ -137,9 +145,11 @@ export default {
         },
         /* Показываем первый элемент */
         showFirst() {
-            this.firstElement.classList.add("visible");
-            // Прибавляем в счетчик показанных
-            this.count_visible += 1;
+            if (this.firstElement) {
+                this.firstElement.classList.add("visible");
+                // Прибавляем в счетчик показанных
+                this.count_visible += 1;
+            }
         },
         // Срабатывает при достижение конца видаемого списка с НИЗУ
         intersection_down() {
@@ -151,6 +161,8 @@ export default {
                 // Скрыть снизу
                 this.showDown();
             }
+            // Показываем верхнею границу если произошел скролл вниз
+            this.$refs.l_top.classList.remove("hidden");
         },
         // Срабатывает при достижение конца видаемого списка c ВЕРХУ
         intersection_top() {
@@ -170,15 +182,18 @@ export default {
                     // Берем высоту элемента и добавляем к уже сахаренным координатам, чтобы не было скачков
                     y + this.top_visible_elm.offsetHeight
                 );
+            } else {
+                // Скрываем верхнею границу если сейчас скролл в самом верху
+                this.$refs.l_top.classList.add("hidden");
             }
         },
         /*Показать элементы внизу*/
         showDown() {
             // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            // console.log("showDown -" + c);
+            // console.log("showDown -" + c + ":" + this.count_visible);
             // Если можно показывать
-            if (c) {
+            if (c && this.down_visible_elm) {
                 // Берем следующий не показанный элемент
                 const tmp = this.down_visible_elm.nextElementSibling;
                 // Если он существует
@@ -199,9 +214,9 @@ export default {
         showTop() {
             // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            // console.log("showTop -" + c);
+            // console.log("showTop -" + c + ":" + this.count_visible);
             // Если можно показывать
-            if (c) {
+            if (c && this.top_visible_elm) {
                 // Берем предыдущий не показанный элемент
                 const tmp = this.top_visible_elm.previousElementSibling;
                 // Если он существует
@@ -222,7 +237,7 @@ export default {
         hiddenDown() {
             // Если можно скрывать
             const c = this.checkCountVisibleFrom_Hidden();
-            // console.log("hiddenDown -" + c);
+            // console.log("hiddenDown -" + c + ":" + this.count_visible);
             if (c) {
                 // Если он показан
                 if (this.down_visible_elm.classList.contains("visible")) {
@@ -240,7 +255,7 @@ export default {
         hiddenTop() {
             // Если можно скрывать
             const c = this.checkCountVisibleFrom_Hidden();
-            // console.log("hiddenTop -" + c);
+            // console.log("hiddenTop -" + c + ":" + this.count_visible);
             if (c) {
                 // Если он показан
                 if (this.top_visible_elm.classList.contains("visible")) {
@@ -256,8 +271,10 @@ export default {
         },
         /* Отслеживания изменений динамического размера у `vscroller` для установки этого размера в статический размер `box` */
         vscrollerResizeObserver() {
-            /* нельзя задать через css динамический размер для `box` 
-            так как прокручиваемые списки должны иметь точную высоту */
+            /* 
+            нельзя задать через css динамический размер для `box`
+            так как прокручиваемые списки должны иметь точную высоту
+            */
             const resizeObserver = new ResizeObserver(() => {
                 this.$refs.box.style.setProperty(
                     "height",
@@ -267,11 +284,20 @@ export default {
             resizeObserver.observe(this.$refs.vscroller);
         },
     },
-    computed: {
-        firstElement() {
-            return this.$refs.items.children[0];
-        },
+    updated() {
+        // При обновление элементов в списке из вне, делаем проверки
+        this.countItems = this.$refs.items.childElementCount;
+        this.firstElement = this.$refs.items.children[0];
+        if (
+            this.top_visible_elm == undefined ||
+            (!this.top_visible_elm.parentNode &&
+                !this.down_visible_elm.parentNode)
+        ) {
+            this.count_visible = 0;
+            this.init();
+        }
     },
+    computed: {},
 };
 </script>
 <style lang="scss">
@@ -283,7 +309,7 @@ export default {
     .box {
         width: 100%;
         ///  Должен взяться автоматически из `vscrollerResizeObserver`
-        height: 0px;
+        height: 500px;
         ///
         overflow: auto;
         .limit {
@@ -294,6 +320,9 @@ export default {
             }
             &.bottom {
                 // background: yellow;
+            }
+            &.hidden {
+                display: none;
             }
         }
         .items_list {
@@ -308,7 +337,7 @@ export default {
     width: 100%;
     display: none;
     &.visible {
-        display: block;
+        display: v-bind(display_visible_item);
     }
 }
 </style>
