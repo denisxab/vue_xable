@@ -263,15 +263,12 @@ export default {
 .vscroller {
     width: 100%;
     height: 100%;
-    border: 1px solid rgb(156, 192, 147);
     .box {
         width: 100%;
-        ///
-        height: 50vh;
-        // height: 500px;
+        ///  Должен взяться автоматически из `vscrollerResizeObserver`
+        height: 0px;
         ///
         overflow: auto;
-        border: 1px solid aqua;
         .limit {
             display: block;
             margin: auto;
@@ -283,19 +280,15 @@ export default {
             }
         }
         .items_list {
-            color: ghostwhite;
-            padding: 8px;
             width: 100%;
         }
     }
 }
 
 .item {
+    // Высоту принимаем из пропса
     height: v-bind(height_item);
     width: 100%;
-    padding: 8px;
-    border: 1px solid wheat;
-    text-align: center;
     display: none;
     &.visible {
         display: block;
