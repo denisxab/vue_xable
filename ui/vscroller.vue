@@ -4,13 +4,15 @@
 
 Показывает только указанные(min_visible,max_visible) количество элементов.
 
-Родительский элемент должен иметь высоту(height) в `%` или `px`
+- Родительский элемент должен иметь высоту(height) в `%` или `px`
+- Элемент должен быть по умолчанию скрыт `display:none`
 
 <vscroller
     :min_visible="10"
     :max_visible="11"
     :count_next="1"
     :height_item="`100px`"
+    :display_visible_item="`flex`"
 >   
     Сюда можно поместить любой список, обязательно укажите класс `item` ! 
     <div class="item" v-for="(it, id) in files" :key="id">{{ it }}</div>
