@@ -1,3 +1,22 @@
+<!-- 
+Ленивый динамический список. Показывает только указанные(min_visible,max_visible) количество элементов.
+
+<vscroller
+    :files="files"
+    :min_visible="10"
+    :max_visible="11"
+    :count_next="1"
+>   
+    Сюда можно поместить любой список, обязательно укажите класс `item` ! 
+    <div class="item" v-for="(it, id) in files" :key="id">{{ it }}</div>
+</vscroller>
+
+
+Можно добавлять элементы в начало и конец списка, если вставить элемент между видимыми элементами, то это
+ошибка.
+
+-->
+
 <template>
     <div ref="box" class="box">
         <div
@@ -39,6 +58,10 @@ export default {
             type: Number,
             default: 1,
         },
+        height_item: {
+            type: String,
+            default: '100px',
+        },
     },
     // Переменные
     data() {
@@ -46,10 +69,6 @@ export default {
             //
             // Системный
             //
-            // Последний элемент в списке(не важно видимый или нет)
-            last_element: <HTMLElement>undefined,
-            // Первый элемент в списке(не важно видимый или нет)
-            first_element: <HTMLElement>undefined,
             // Крайний видимый элемент с верху
             top_visible_elm: <HTMLElement>undefined,
             // Крайний видимый элемент с низу
@@ -58,9 +77,44 @@ export default {
             count_visible: <number>0,
         };
     },
-
-    // Методы
+    mounted() {
+        if (this.min_visible >= this.max_visible) {
+            throw Error("Минимум больше Максимума");
+        } else {
+            this.init();
+        }
+    },
     methods: {
+        /*Проверить количество показанных элементов перед скрытия*/
+        checkCountVisibleFrom_Hidden() {
+            // Если пытаются скрыть элемент, когда и так количество показных элементом придельно минимально
+            return this.count_visible - 1 < this.min_visible ? false : true;
+        },
+        /*Проверить количество показанных элементов перед новым показом*/
+        checkCountVisibleFrom_Visible() {
+            // Если пытаются показать элемент, когда и так количество показных элементом придельно максимально
+            return this.count_visible + 1 > this.max_visible ? false : true;
+        },
+        /*Инициализация списка*/
+        init() {
+            const items: HTMLElement = this.$refs.items;
+            const childNodes: HTMLCollection = items.children;
+            // Начальная позиция
+            this.down_visible_elm = childNodes[0];
+            this.top_visible_elm = childNodes[0];
+            // Показываем первый элемент
+            this.showFirst();
+            // Показываем сначала максимум доступных элементов
+            for (let i = 0; i < this.max_visible; i++) {
+                this.showDown();
+            }
+        },
+        /* Показываем первый элемент */
+        showFirst() {
+            this.firstElement.classList.add("visible");
+            // Прибавляем в счетчик показанных
+            this.count_visible += 1;
+        },
         // Срабатывает при достижение конца видаемого списка с НИЗУ
         intersection_down() {
             // console.log("Пересек Низ");
@@ -75,7 +129,7 @@ export default {
         // Срабатывает при достижение конца видаемого списка c ВЕРХУ
         intersection_top() {
             // console.log("Пересек Верх");
-            if (this.top_visible_elm != this.first_element) {
+            if (this.top_visible_elm != this.firstElement) {
                 // Запоминаем положение скорла до добавления элемента
                 const y = this.$refs.box.scrollTop;
                 const x = this.$refs.box.scrollLeft;
@@ -96,7 +150,7 @@ export default {
         showDown() {
             // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            console.log("showDown -" + c);
+            // console.log("showDown -" + c);
             // Если можно показывать
             if (c) {
                 // Берем следующий не показанный элемент
@@ -119,7 +173,7 @@ export default {
         showTop() {
             // Проверяем можно ли показывать еще элементы
             const c = this.checkCountVisibleFrom_Visible();
-            console.log("showTop -" + c);
+            // console.log("showTop -" + c);
             // Если можно показывать
             if (c) {
                 // Берем предыдущий не показанный элемент
@@ -174,49 +228,12 @@ export default {
                 }
             }
         },
-        /*Проверить количество показанных элементов перед скрытия*/
-        checkCountVisibleFrom_Hidden() {
-            // Если пытаются скрыть элемент, когда и так количество показных элементом придельно минимально
-            return this.count_visible - 1 < this.min_visible ? false : true;
-        },
-        /*Проверить количество показанных элементов перед новым показом*/
-        checkCountVisibleFrom_Visible() {
-            // Если пытаются показать элемент, когда и так количество показных элементом придельно максимально
-            return this.count_visible + 1 > this.max_visible ? false : true;
-        },
-        /*Инициализация списка*/
-        init() {
-            const items: HTMLElement = this.$refs.items;
-            const childNodes: NodeListOf<Element> =
-                items.querySelectorAll(".item");
-            // Первый элемент из списка
-            this.first_element = childNodes[0];
-            // Последний элемент из списка
-            this.last_element = childNodes[childNodes.length - 1];
-            // Начальная позиция
-            this.down_visible_elm = childNodes[0];
-            this.top_visible_elm = childNodes[0];
-            // Показываем первый элемент
-            this.showFirst();
-            // Показываем сначала максимум доступных элементов
-            for (let i = 0; i < this.max_visible; i++) {
-                this.showDown();
-            }
-        },
-        /* Показываем первый элемент */
-        showFirst() {
-            this.first_element.classList.add("visible");
-            // Прибавляем в счетчик показанных
-            this.count_visible += 1;
+    },
+    computed: {
+        firstElement() {
+            return this.$refs.items.children[0];
         },
     },
-    mounted() {
-        this.init();
-        if (this.min_visible >= this.max_visible) {
-            throw Error("Минимум больше Максимума");
-        }
-    },
-    computed: {},
 };
 </script>
 <style lang="scss">
@@ -247,7 +264,7 @@ export default {
     }
 }
 .item {
-    height: 100px;
+    height: v-bind(height_item);
     width: 100%;
     padding: 8px;
     border: 1px solid wheat;
