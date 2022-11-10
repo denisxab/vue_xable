@@ -46,7 +46,6 @@
                 ref="l_top"
                 v-intersection="intersection_top"
                 class="limit top item"
-                @click="intersection_top"
             ></div>
             <div ref="items" class="items_list">
                 <slot></slot>
@@ -55,7 +54,6 @@
                 ref="l_bottom"
                 v-intersection="intersection_down"
                 class="limit bottom item"
-                @click="intersection_down"
             ></div>
         </div>
     </div>
@@ -63,8 +61,12 @@
 <script lang="ts">
 export default {
     name: "vscroller",
-    // Компоненты
-    components: {},
+    emits: [
+        // Событие пересечения верха
+        "intersection_top",
+        // Событие пересечения низа
+        "intersection_down",
+    ],
     // Аргументы
     props: {
         // Сколько минимально отображать элементов(нужно подобрать количество, чтобы высота элементов скрывала нижнею границу)
@@ -156,6 +158,7 @@ export default {
         // Срабатывает при достижение конца видаемого списка с НИЗУ
         intersection_down() {
             // console.log("Пересек Низ");
+            this.$emit("intersection_down");
             // Показываем по `count_next` элементов в низ, и скрываем столько же вверх
             for (let i = 0; i < this.count_next; i++) {
                 // Показать сверху
@@ -169,6 +172,7 @@ export default {
         // Срабатывает при достижение конца видаемого списка c ВЕРХУ
         intersection_top() {
             // console.log("Пересек Верх");
+            this.$emit("intersection_top");
             if (this.top_visible_elm != this.firstElement) {
                 // Запоминаем положение скорла до добавления элемента
                 const y = this.$refs.box.scrollTop;
@@ -273,7 +277,7 @@ export default {
         },
         /* Отслеживания изменений динамического размера у `vscroller` для установки этого размера в статический размер `box` */
         vscrollerResizeObserver() {
-            /* 
+            /*
             нельзя задать через css динамический размер для `box`
             так как прокручиваемые списки должны иметь точную высоту
             */

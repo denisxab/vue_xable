@@ -3,14 +3,25 @@
 -->
 <template>
     <div class="vcode">
-        <pre v-html="codeText" :style="cssProps"></pre>
+        <pre v-html="codeText"></pre>
     </div>
 </template>
 <script lang="ts">
+// Для экранирования HTML
+// @ts-ignore
+String.prototype.escapeHtml = function () {
+    var tagsToReplace = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+    };
+    return this.replace(/[&<>]/g, function (tag) {
+        return tagsToReplace[tag] || tag;
+    });
+};
+
 export default {
-    name:'vcode',
-    // Компоненты
-    components: {},
+    name: "vcode",
     // Аргументы
     props: {
         text: String,
@@ -26,7 +37,10 @@ export default {
     computed: {
         codeText() {
             if (this.text) {
-                const res = this.text
+                let res = this.text
+                    // Экранируем HTML
+                    .escapeHtml()
+                    // Обернуть переносы в тег code
                     .split("\n")
                     .map((i: string) => {
                         return `<code>${i}</code>`;
@@ -36,15 +50,7 @@ export default {
             }
             return "";
         },
-        cssProps() {
-            return {
-                "--border": this.border,
-                "--color": this.color,
-            };
-        },
     },
-    // Методы
-    methods: {},
 };
 </script>
 <style lang="scss">
@@ -52,12 +58,12 @@ export default {
     width: 100%;
     height: 100%;
     pre {
-        color: var(--color); // #d8dee9;
+        color: v-bind(color); // #d8dee9;
         counter-reset: line;
         border-radius: 4px;
         width: 100%;
         height: 100%;
-        border: solid 1px var(--border); //#2e3440;
+        border: solid 1px v-bind(border); //#2e3440;
         overflow: auto;
         font-size: 1.2em;
         code {
