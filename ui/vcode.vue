@@ -1,9 +1,12 @@
 <!-- 
-    Нумерованные строки
+    Нумерованные строки. 
+    
+    Использует RecycleScroller
+    https://github.com/Akryum/vue-virtual-scroller
 -->
 <template>
     <div class="vcode">
-        <pre v-html="codeText"></pre>
+        <pre><RecycleScroller class="scroller" :items="ArrayText" key-field="i" :item-size="20" :gridItems="20" :buffer="200" v-slot="{ item, index }"><line><span class="n">{{ item.i }}</span><span>{{ item.n }}</span></line></RecycleScroller></pre>
     </div>
 </template>
 <script lang="ts">
@@ -20,6 +23,8 @@ String.prototype.escapeHtml = function () {
     });
 };
 
+let Genirator = 0;
+
 export default {
     name: "vcode",
     // Аргументы
@@ -35,20 +40,22 @@ export default {
         },
     },
     computed: {
-        codeText() {
+        ArrayText(): string[] | undefined {
             if (this.text) {
-                let res = this.text
-                    // Экранируем HTML
-                    .escapeHtml()
-                    // Обернуть переносы в тег code
-                    .split("\n")
-                    .map((i: string) => {
-                        return `<code>${i}</code>`;
-                    })
-                    .join("\n");
-                return res;
+                return (
+                    this.text
+                        // Экранируем HTML
+                        .escapeHtml()
+                        // Обернуть переносы в тег code
+                        .split("\n")
+                        .map((i: string, index: number) => {
+                            Genirator += 1;
+                            return { n: `${i}\n`, i: index + 1 };
+                        })
+                    // .join("\n")
+                );
             }
-            return "";
+            return [];
         },
     },
 };
@@ -66,17 +73,20 @@ export default {
         border: solid 1px v-bind(border); //#2e3440;
         overflow: auto;
         font-size: 1.2em;
-        code {
-            counter-increment: line;
-            &:before {
-                content: counter(line);
-                display: inline-block;
-                width: 1.5em;
-                border-right: 1px solid #ebcb8b;
-                padding: 0 0.5em;
-                margin-right: 0.5em;
-                background: #2e3440;
-                -webkit-user-select: none;
+        .scroller {
+            height: 100%;
+            line {
+                // counter-increment: line;
+                .n {
+                    width: 3.4em;
+                    display: inline-block;
+                    border-right: 1px solid #ebcb8b;
+                    padding: 0 0.5em;
+                    margin-right: 0.5em;
+                    background: #2e3440;
+                    -webkit-user-select: none;
+                    text-align: right;
+                }
             }
         }
     }
